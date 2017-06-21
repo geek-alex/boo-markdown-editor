@@ -1,0 +1,98 @@
+<link rel="import" href="../polymer/polymer-element.html">
+<link rel="import" href="../paper-styles/element-styles/paper-material-styles.html">
+<link rel="import" href="../marked-element/marked-element.html">
+<link rel="import" href="../paper-input/paper-textarea.html">
+<link rel="import" href="../boo-window/boo-window.html">
+
+<dom-module id="boo-markdown-editor">
+  <template>
+    <style include="paper-material-styles">
+      :host {
+        display: block;
+      }
+      .preview {
+        display: block;
+        position: fixed;
+        background-color: white;
+        overflow-Y: auto; 
+        bottom: 20px;
+        right: 20px;
+        width: 300px;
+        height: 200px;
+        @apply --shadow-elevation-16dp;
+        @apply --preview;
+      }
+      .preview>section {
+        padding: 10px;
+      }
+    </style>
+    <div class="toolbar">
+      <slot></slot>
+    </div>
+    <paper-textarea value={{content}}></paper-textarea>
+    <boo-window class="preview" width="400" height="300">
+      <section slot="header">
+        <marked-element markdown=[[content]]>
+          <div slot="markdown-html"></div>
+        </marked-element>
+      </section>
+    </boo-window>
+  </template>
+
+  <script>
+
+    /**
+     * `boo-markdown-editor`
+     * a markdown editor
+     *
+     * @customElement
+     * @polymer
+     * @demo demo/index.html
+     */
+    class BooMarkdownEditor extends Polymer.Element {
+
+      static get is() { return 'boo-markdown-editor'; }
+
+      static get properties() {
+        return {
+          content: {
+            type: String,
+            reflectToAttribute: true,
+            notify: true
+          },
+          preview: {
+            type: Boolean,
+            reflectToAttribute: true,
+            notify: true
+          }
+        };
+      }
+
+      connectedCallback() {
+        super.connectedCallback();
+        let _this = this;
+        let booWindow = _this.shadowRoot.querySelector('boo-window');
+        let viewSize = _this._getWindowSize();
+        booWindow.x = viewSize.width - booWindow.width - 20;
+        booWindow.y = viewSize.height - booWindow.height - 20;
+      }
+
+      _getWindowSize () {
+        var result = {};
+        if (document.documentElement.clientWidth) {
+          result.width = document.documentElement.clientWidth;
+        } else {
+          result.width = document.body.clientWidth;
+        }
+        if (document.documentElement.clientHeight) {
+          result.height = document.documentElement.clientHeight;
+        } else {
+          result.height = document.body.clientHeight;
+        }
+        return result;
+      }
+    }
+
+    window.customElements.define(BooMarkdownEditor.is, BooMarkdownEditor);
+  </script>
+</dom-module>
