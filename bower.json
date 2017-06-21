@@ -5,6 +5,7 @@
   "dependencies": {
     "polymer": "Polymer/polymer#^2.0.0",
     "paper-styles": "PolymerElements/paper-styles#latest",
+    "iron-ajax": "PolymerElements/iron-ajax#latest",
     "boo-window" : "hackyoung/boo-window#latest",
     "paper-input" : "PolymerElements/paper-input#latest",
     "marked-element" : "PolymerElements/marked-element#latest"

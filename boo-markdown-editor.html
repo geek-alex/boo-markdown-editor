@@ -2,6 +2,7 @@
 <link rel="import" href="../paper-styles/element-styles/paper-material-styles.html">
 <link rel="import" href="../marked-element/marked-element.html">
 <link rel="import" href="../paper-input/paper-textarea.html">
+<link rel="import" href="../iron-ajax/iron-ajax.html">
 <link rel="import" href="../boo-window/boo-window.html">
 
 <dom-module id="boo-markdown-editor">
@@ -9,6 +10,7 @@
     <style include="paper-material-styles">
       :host {
         display: block;
+        position: relative;
       }
       .preview {
         display: block;
@@ -21,16 +23,33 @@
         height: 200px;
         @apply --shadow-elevation-16dp;
         @apply --preview;
+        @apply --markdown-preview;
       }
       .preview>section {
         padding: 10px;
       }
+      .toolbar {
+        background-color: grey;
+        position: absolute;
+        width: 300px;
+        height: 50px;
+        border-radius: 3px;
+        max-width: 80%;
+        max-height: 100px;
+        @apply --shadow-elevation-2dp;
+        @apply --markdown-toolbar;
+      }
     </style>
+    <iron-ajax 
+      auto
+      url=[[templateUrl]]
+      handle-as="text"
+      on-response="_templateRender"></iron-ajax>
     <div class="toolbar">
       <slot></slot>
     </div>
     <paper-textarea value={{content}}></paper-textarea>
-    <boo-window class="preview" width="400" height="300">
+    <boo-window class="preview" width=[[previewWidth]] height=[[previewHeight]]>
       <section slot="header">
         <marked-element markdown=[[content]]>
           <div slot="markdown-html"></div>
@@ -60,19 +79,104 @@
             reflectToAttribute: true,
             notify: true
           },
+          templateUrl: {
+            type: String,
+            reflectToAttribute: true
+          },
+          showToolbar: {
+            type: Boolean,
+            value: false,
+            notify: true,
+            observer: '_showToolbarChanged'
+          },
+          toolbarX: {
+            type: Number,
+          },
+          toolbarY: {
+            type: Number,
+          },
           preview: {
             type: Boolean,
             reflectToAttribute: true,
             notify: true
-          }
+          },
+          previewWidth: {
+            type: Number,
+            value: 400
+          },
+          previewHeight: {
+            type: Number,
+            value: 300
+          },
         };
       }
 
       connectedCallback() {
         super.connectedCallback();
         let _this = this;
-        let booWindow = _this.shadowRoot.querySelector('boo-window');
-        let viewSize = _this._getWindowSize();
+        window.addEventListener('resize', e => {
+          _this._initPreview();
+          _this._initContextMenu();
+        });
+        this._initPreview();
+        this._initContextMenu();
+      }
+
+      _showToolbarChanged(showToolbar) {
+        let toolbar = this.shadowRoot.querySelector('.toolbar');
+        if (showToolbar) {
+          toolbar.style.left = this.toolbarX + 'px';
+          toolbar.style.top = this.toolbarY + 'px';
+          toolbar.style.display = 'block';
+          toolbar.animate([{
+            opacity: 0,
+            transform: 'translateY(-10px)'
+          }, {
+            opacity: 1,
+            transform: 'translateY(0px)'
+          }], 50);
+          return;
+        }
+        new Promise((resolved, reject) => {
+          let ani = toolbar.animate([{
+            opacity: 1,
+            transform: 'translateY(0px)'
+          }, {
+            opacity: 0,
+            transform: 'translateY(-10px)'
+          }], 50);
+          ani.pause();
+          ani.onfinish = e => {
+            resolved();
+          }
+          ani.play();
+        }).then(() => {
+          toolbar.style.display = 'none';
+        });
+      }
+
+      _templateRender(e) {
+        this.content = e.detail.response;
+      }
+
+      _initContextMenu() {
+        let _this = this;
+        let editor = this.shadowRoot.querySelector('paper-textarea');
+        editor.addEventListener('contextmenu', e => {
+          let rect = editor.getBoundingClientRect();
+          _this.toolbarX = e.screenX - rect.left + 10;
+          _this.toolbarY = e.screenY - rect.top - 100;
+          _this.showToolbar = true;
+          e.preventDefault();
+        });
+        editor.addEventListener('click', e => {
+          _this.showToolbar = false;
+        });
+      }
+
+      _initPreview() {
+        let booWindow = this.shadowRoot.querySelector('boo-window');
+        let viewSize = this._getWindowSize();
         booWindow.x = viewSize.width - booWindow.width - 20;
         booWindow.y = viewSize.height - booWindow.height - 20;
       }
@@ -93,6 +197,8 @@
       }
     }
 
-    window.customElements.define(BooMarkdownEditor.is, BooMarkdownEditor);
+    window.customElements.define(
+      BooMarkdownEditor.is, BooMarkdownEditor
+    );
   </script>
 </dom-module>
