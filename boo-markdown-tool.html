@@ -1,0 +1,29 @@
+<link rel="import" href="../polymer/polymer-element.html">
+<link rel="import" href="./boo-markdown-editor.html">
+
+<dom-module>
+  <script>
+    class BooMarkdownTool extends Polymer.Element {
+
+      static get properties() {
+        return {
+          markedEditor: {
+            type: Object
+          },
+          disabled: {
+            type: Boolean,
+            value: false
+          }
+        };
+      }
+
+      connectedCallback() {
+        super.connectedCallback();
+        if (!(this.parentNode instanceof BooMarkdownEditor)) {
+          throw new "BooMarkdownTool错误的用法";
+        }
+        this.markedEditor = this.parentNode;
+      }
+    }
+  </script>
+</dom-module>

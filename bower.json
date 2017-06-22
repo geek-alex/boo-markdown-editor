@@ -8,7 +8,9 @@
     "iron-ajax": "PolymerElements/iron-ajax#latest",
     "boo-window" : "hackyoung/boo-window#latest",
     "iron-autogrow-textarea" : "PolymerElements/iron-autogrow-textarea#latest",
-    "marked-element" : "PolymerElements/marked-element#latest"
+    "marked-element" : "PolymerElements/marked-element#latest",
+    "iron-icon" : "PolymerElements/iron-icon#latest",
+    "iron-iconset-svg" : "PolymerElements/iron-iconset-svg#latest"
   },
   "devDependencies": {
     "iron-demo-helpers": "PolymerElements/iron-demo-helpers#^2.0.0",

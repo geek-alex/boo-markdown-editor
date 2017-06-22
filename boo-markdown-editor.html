@@ -28,16 +28,33 @@
       .preview>section {
         padding: 10px;
       }
+      [slot="markdown-html"] img {
+        max-width: 100%;
+      }
       .toolbar {
         background-color: grey;
         position: absolute;
-        width: 300px;
-        height: 50px;
-        border-radius: 3px;
+        padding: 8px;
+        border-radius: 2px;
         max-width: 80%;
         max-height: 100px;
+        display: block;
+        z-index: 1000000;
         @apply --shadow-elevation-2dp;
         @apply --markdown-toolbar;
+      }
+      .toolbar::before {
+        width: 0.625em;
+        height: 0.625em;
+        border-top: inherit;
+        border-left: inherit;
+        background: inherit;
+        position: absolute;
+        transform: rotate(45deg);
+        top: -0.35em;
+        left: calc(50% - 0.35em);
+        display: inline-block;
+        content: '';
       }
       iron-autogrow-textarea {
         border: none;
@@ -54,7 +71,9 @@
     <div class="toolbar">
       <slot></slot>
     </div>
-    <iron-autogrow-textarea rows="5" value={{content}}></iron-autogrow-textarea>
+    <iron-autogrow-textarea 
+      rows=[[rows]] 
+      value={{content}}></iron-autogrow-textarea>
     <boo-window class="preview" width=[[previewWidth]] height=[[previewHeight]]>
       <section slot="header">
         <marked-element markdown=[[content]]>
@@ -117,6 +136,11 @@
             type: Number,
             value: 300
           },
+          rows: {
+            type: Number,
+            reflectToAttribute: true,
+            value: 5
+          }
         };
       }
 
@@ -135,6 +159,7 @@
       }
 
       insert(text) {
+        this.editor.focus();
         if (document.queryCommandSupported('insertText')) {
           document.execCommand('insertText', false, text);
           return this;
@@ -225,13 +250,13 @@
         };
       }
 
-      _showToolbarChanged(showToolbar) {
+      _showToolbarChanged(showToolbar, old) {
         let toolbar = this.shadowRoot.querySelector('.toolbar');
-        let rect = toolbar.getBoundingClientRect();
         if (showToolbar) {
-          toolbar.style.left = this.toolbarX + 'px';
-          toolbar.style.top = this.toolbarY + 'px';
           toolbar.style.display = 'block';
+          let rect = toolbar.getBoundingClientRect();
+          toolbar.style.left = (this.toolbarX - (rect.width / 2)) + 'px';
+          toolbar.style.top = this.toolbarY + 'px';
           toolbar.animate([{
             opacity: 0,
             transform: 'translateY(-5px)'
@@ -239,6 +264,10 @@
             opacity: 1,
             transform: 'translateY(0px)'
           }], 100);
+          return;
+        }
+        if (old == undefined) {
+          toolbar.style.display = 'none';
           return;
         }
         new Promise((resolved, reject) => {
@@ -268,16 +297,12 @@
         let editor = this.shadowRoot.querySelector('iron-autogrow-textarea');
         editor.addEventListener('contextmenu', e => {
           let rect = editor.getBoundingClientRect();
-          _this.toolbarX = e.screenX - rect.left + 10;
-          _this.toolbarY = e.screenY - rect.top - 100;
+          _this.toolbarX = e.screenX - rect.left;
+          _this.toolbarY = e.screenY - rect.top - 60;
           _this.showToolbar = true;
           e.preventDefault();
         });
-        editor.addEventListener('blur', e => {
-          _this.showToolbar = false;
-        });
         editor.addEventListener('click', e => {
-          _this.insertAt("[helloworld](http://www.)\n", 30000);
           _this.showToolbar = false;
         });
       }
