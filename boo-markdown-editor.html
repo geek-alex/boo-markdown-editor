@@ -135,6 +135,10 @@
       }
 
       insert(text) {
+        if (document.queryCommandSupported('insertText')) {
+          document.execCommand('insertText', false, text);
+          return this;
+        }
         let range = this._getRange(this.editor);
         this.insertAt(text, range.start, range.end);
         return this;
