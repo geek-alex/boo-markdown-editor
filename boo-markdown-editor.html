@@ -1,7 +1,7 @@
 <link rel="import" href="../polymer/polymer-element.html">
 <link rel="import" href="../paper-styles/element-styles/paper-material-styles.html">
 <link rel="import" href="../marked-element/marked-element.html">
-<link rel="import" href="../paper-input/paper-textarea.html">
+<link rel="import" href="../iron-autogrow-textarea/iron-autogrow-textarea.html">
 <link rel="import" href="../iron-ajax/iron-ajax.html">
 <link rel="import" href="../boo-window/boo-window.html">
 
@@ -39,6 +39,12 @@
         @apply --shadow-elevation-2dp;
         @apply --markdown-toolbar;
       }
+      iron-autogrow-textarea {
+        border: none;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0);
+      }
     </style>
     <iron-ajax 
       auto
@@ -48,7 +54,7 @@
     <div class="toolbar">
       <slot></slot>
     </div>
-    <paper-textarea value={{content}}></paper-textarea>
+    <iron-autogrow-textarea rows="5" value={{content}}></iron-autogrow-textarea>
     <boo-window class="preview" width=[[previewWidth]] height=[[previewHeight]]>
       <section slot="header">
         <marked-element markdown=[[content]]>
@@ -78,6 +84,9 @@
             type: String,
             reflectToAttribute: true,
             notify: true
+          },
+          editor: {
+            type: Object,
           },
           templateUrl: {
             type: String,
@@ -120,21 +129,130 @@
         });
         this._initPreview();
         this._initContextMenu();
+        this.editor = this.shadowRoot
+          .querySelector('iron-autogrow-textarea')
+          .shadowRoot.querySelector('#textarea');
+      }
+
+      insert(text) {
+        let range = this._getRange(this.editor);
+        this.insertAt(text, range.start, range.end);
+        return this;
+      }
+
+      delete() {
+        let range = this._getRange(this.editor);
+        this.deleteAt(range.start, range.end);
+        return this;
+      }
+
+      deleteAt(start, end) {
+        this.insertAt('', start, end);
+        return this;
+      }
+
+      insertAt(text, start, end)
+      {
+        //IE support
+        if (document.selection) {
+          this.editor.focus();
+          let sel = document.selection.createRange();
+          sel.text = text;
+          return;
+        }
+        this.content = this.content.substring(0, start)
+          + text
+          + this.content.substring(end, this.content.length);
+
+        return this.select(start + text.length);
+      }
+
+      select(start, end) {
+        let editor = this.editor;
+        if (arguments.length == 1) {
+          end = start;
+        }
+        if ("selectionStart" in editor) {
+          setTimeout(function() {
+            editor.selectionStart = start;
+            editor.selectionEnd = end;
+          }, 1);
+          return this;;
+        }
+        if (editor.createTextRange) {
+          var rng = editor.createTextRange();
+          rng.moveStart("character", start);
+          rng.collapse();
+          rng.moveEnd("character", end - start);
+          rng.select();
+        }
+        return this;
+      }
+
+      _getRange(inputElem) {
+        var start = 0, end = 0, normalizedValue, range,
+            textInputRange, len, endRange;
+
+        if (typeof inputElem.selectionStart == "number" && 
+                              typeof inputElem.selectionEnd == "number") {
+          return {
+            start: inputElem.selectionStart,
+            end: inputElem.selectionEnd,
+          };
+        }
+        range = document.selection.createRange();
+        if (range && range.parentElement() == inputElem) {
+          len = inputElem.value.length;
+          normalizedValue = inputElem.value.replace(/\r\n/g, "\n");
+
+          // Create a working TextRange that lives only in the input
+          textInputRange = inputElem.createTextRange();
+          textInputRange.moveToBookmark(range.getBookmark());
+
+          // Check if the start and end of the selection are at the very end
+          // of the input, since moveStart/moveEnd doesn't return what we want
+          // in those cases
+          endRange = inputElem.createTextRange();
+          endRange.collapse(false);
+
+          if (textInputRange.compareEndPoints("StartToEnd", endRange) > -1) {
+            return {
+              start: len,
+              end: len
+            };
+          }
+          start = -textInputRange.moveStart("character", -len);
+          start += normalizedValue.slice(0, start).split("\n").length - 1;
+
+          if (textInputRange.compareEndPoints("EndToEnd", endRange) > -1) {
+            return {
+              start: start,
+              end: len
+            };
+          }
+          end = -textInputRange.moveEnd("character", -len);
+          end += normalizedValue.slice(0, end).split("\n").length - 1;
+        }
+        return {
+            start: start,
+            end: end
+        };
       }
 
       _showToolbarChanged(showToolbar) {
         let toolbar = this.shadowRoot.querySelector('.toolbar');
+        let rect = toolbar.getBoundingClientRect();
         if (showToolbar) {
           toolbar.style.left = this.toolbarX + 'px';
           toolbar.style.top = this.toolbarY + 'px';
           toolbar.style.display = 'block';
           toolbar.animate([{
             opacity: 0,
-            transform: 'translateY(-10px)'
+            transform: 'translateY(-5px)'
           }, {
             opacity: 1,
             transform: 'translateY(0px)'
-          }], 50);
+          }], 100);
           return;
         }
         new Promise((resolved, reject) => {
@@ -161,13 +279,16 @@
 
       _initContextMenu() {
         let _this = this;
-        let editor = this.shadowRoot.querySelector('paper-textarea');
+        let editor = this.shadowRoot.querySelector('iron-autogrow-textarea');
         editor.addEventListener('contextmenu', e => {
           let rect = editor.getBoundingClientRect();
           _this.toolbarX = e.screenX - rect.left + 10;
           _this.toolbarY = e.screenY - rect.top - 100;
           _this.showToolbar = true;
           e.preventDefault();
+        });
+        editor.addEventListener('blur', e => {
+          _this.showToolbar = false;
         });
         editor.addEventListener('click', e => {
           _this.showToolbar = false;
@@ -197,8 +318,6 @@
       }
     }
 
-    window.customElements.define(
-      BooMarkdownEditor.is, BooMarkdownEditor
-    );
+    window.customElements.define(BooMarkdownEditor.is, BooMarkdownEditor);
   </script>
 </dom-module>
