@@ -296,6 +296,16 @@
         let _this = this;
         let editor = this.shadowRoot.querySelector('iron-autogrow-textarea');
         editor.addEventListener('contextmenu', e => {
+          let contextmenu = false;
+          for(let i in _this.childNodes) {
+            if (_this.childNodes[i].tagName != undefined) {
+              contextmenu = true;
+              break;
+            }
+          }
+          if (!contextmenu) {
+            return;
+          }
           let rect = editor.getBoundingClientRect();
           _this.toolbarX = e.screenX - rect.left;
           _this.toolbarY = e.screenY - rect.top - 60;
