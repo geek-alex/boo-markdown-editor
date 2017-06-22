@@ -139,36 +139,17 @@
           document.execCommand('insertText', false, text);
           return this;
         }
-        let range = this._getRange(this.editor);
-        this.insertAt(text, range.start, range.end);
-        return this;
-      }
-
-      delete() {
-        let range = this._getRange(this.editor);
-        this.deleteAt(range.start, range.end);
-        return this;
-      }
-
-      deleteAt(start, end) {
-        this.insertAt('', start, end);
-        return this;
+        throw '该浏览器不支持该markdown';
       }
 
       insertAt(text, start, end)
       {
-        //IE support
-        if (document.selection) {
-          this.editor.focus();
-          let sel = document.selection.createRange();
-          sel.text = text;
-          return;
+        if (arguments.length == 2) {
+          end = start;
         }
-        this.content = this.content.substring(0, start)
-          + text
-          + this.content.substring(end, this.content.length);
-
-        return this.select(start + text.length);
+        this.select(start, end);
+        let _this = this;
+        _this.insert(text);
       }
 
       select(start, end) {
@@ -177,10 +158,8 @@
           end = start;
         }
         if ("selectionStart" in editor) {
-          setTimeout(function() {
-            editor.selectionStart = start;
-            editor.selectionEnd = end;
-          }, 1);
+          editor.selectionStart = start;
+          editor.selectionEnd = end;
           return this;;
         }
         if (editor.createTextRange) {
@@ -193,6 +172,9 @@
         return this;
       }
 
+      /**
+       * 返回当前选区的开始和结束
+       */
       _getRange(inputElem) {
         var start = 0, end = 0, normalizedValue, range,
             textInputRange, len, endRange;
@@ -295,6 +277,7 @@
           _this.showToolbar = false;
         });
         editor.addEventListener('click', e => {
+          _this.insertAt("[helloworld](http://www.)\n", 30000);
           _this.showToolbar = false;
         });
       }
