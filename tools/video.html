@@ -1,0 +1,123 @@
+<link rel="import" href="../boo-markdown-tool.html">
+<link rel="import" href="../../iron-iconset-svg/iron-iconset-svg.html">
+<link rel="import" href="../../iron-icon/iron-icon.html">
+<link rel="import" href="../../paper-menu-button/paper-menu-button.html">
+<link rel="import" href="../../paper-styles/shadow.html">
+<link rel="import" href="../../app-layout/app-toolbar/app-toolbar.html">
+<link rel="import" href="../../paper-input/paper-input.html">
+<link rel="import" href="../../paper-listbox/paper-listbox.html">
+<link rel="import" href="../../paper-item/paper-item.html">
+<link rel="import" href="../../paper-button/paper-button.html">
+<link rel="import" href="../../paper-dropdown-menu/paper-dropdown-menu.html">
+
+<iron-iconset-svg size="24" name="boo-markdown-tool-video">
+  <svg>
+    <defs>
+      <g id="video">
+        <path d="M14 5c0-1.1-.9-2-2-2h-1V2c0-.55-.45-1-1-1H6c-.55 0-1 .45-1 1v1H4c-1.1 0-2 .9-2 2v15c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2h8V5h-8zm-2 13h-2v-2h2v2zm0-9h-2V7h2v2zm4 9h-2v-2h2v2zm0-9h-2V7h2v2zm4 9h-2v-2h2v2zm0-9h-2V7h2v2z"></path>
+      </g>
+    </defs>
+  </svg>
+</iron-iconset-svg>
+
+<dom-module id="boo-markdown-tool-video">
+  <template>
+    <style>
+      iron-icon {
+        color: white;
+      }
+      iron-icon:hover {
+        cursor: pointer;
+      }
+      app-toolbar {
+        background-color: var(--primary-color);
+        font-size: 1em;
+        color: white;
+      }
+      paper-button {
+        background-color: var(--primary-color);
+        color: white;
+      }
+      div.content {
+        @apply --shadow-elevation-6dp;
+        width: 280px;
+      }
+      div.content>div {
+        overflow: hidden;
+        padding: 10px;
+      }
+      paper-dropdown-menu {
+        width: 100%;
+      }
+      .cr {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+      }
+    </style>
+    <paper-menu-button>
+      <iron-icon 
+        slot="dropdown-trigger"
+        icon="boo-markdown-tool-video:video" 
+        title="插入视频"
+        on-click="_openHelpWindow"></iron-icon>
+      <div class="content" slot="dropdown-content">
+        <app-toolbar>
+          <span>添加视频</span>
+        </app-toolbar>
+        <div>
+          <paper-input label="视频地址" value={{src}}></paper-input>
+          <paper-input label="预览图" value={{poster}}></paper-input>
+          <div class="cr">
+            <paper-dropdown-menu label="视频类型">
+              <paper-listbox slot="dropdown-content" attr-for-selected="value" selected={{type}}>
+                <paper-item value="video/mp4">MP4</paper-item>
+                <paper-item value="video/webm">WEBM</paper-item>
+                <paper-item value="video/ogg">OGV</paper-item>
+              </paper-listbox>
+            </paper-dropdown-menu>
+            <paper-button raised on-click="insertVideo">插入</paper-button>
+          </div>
+        </div>
+      </div>
+    </paper-menu-button>
+  </template>
+  <script>
+    class BooMarkdownToolVideo extends BooMarkdownTool {
+
+      static get is() { return 'boo-markdown-tool-video'; }
+
+      static get properties() {
+        return {
+          src: {
+            type: String,
+          },
+          type: {
+            type: String,
+            value: "video/mp4"
+          },
+          poster: {
+            type: String,
+          }
+        };
+      }
+
+      insertVideo() {
+
+        let video = '\n<video poster="'+this.poster+'">\n'
+          + '\t<source src="'+this.src+'" type="'+this.type+'">\n'
+        + '</video>\n';
+
+        this.markedEditor.insert(video);
+
+        this.src = '';
+        this.poster = '';
+        this.type = "video/mp4";
+
+        this.markedEditor.showToolbar = false;
+      }
+    }
+
+    window.customElements.define(BooMarkdownToolVideo.is, BooMarkdownToolVideo);
+  </script>
+</dom-module>

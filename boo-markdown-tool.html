@@ -24,6 +24,21 @@
         }
         this.markedEditor = this.parentNode;
       }
+
+      getScreenSize() {
+        var result = {};
+        if (document.documentElement.clientWidth) {
+          result.width = document.documentElement.clientWidth;
+        } else {
+          result.width = document.body.clientWidth;
+        }
+        if (document.documentElement.clientHeight) {
+          result.height = document.documentElement.clientHeight;
+        } else {
+          result.height = document.body.clientHeight;
+        }
+        return result;
+      }
     }
   </script>
 </dom-module>
