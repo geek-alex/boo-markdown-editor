@@ -98,6 +98,7 @@
       }
 
       _openHelpWindow() {
+        this.markedEditor.showToolbar = false;
         this.helpOpened = true;
       }
 
@@ -111,10 +112,9 @@
           let rect = helpWindow.getBoundingClientRect();
           let screenSize = this.getScreenSize();
           helpWindow.style.display = 'block';
-          helpWindow.x = (screenSize.width - rect.width) / 4;
-          helpWindow.y = (screenSize.height - rect.height) / 4;
           helpWindow.width = Math.max(screenSize.width / 2, 600);
           helpWindow.height = Math.max(screenSize.height / 2, 500);
+          helpWindow.posPolicy = POS_CENTER;
           helpWindow.animate([{
             transform: 'scale(2.0, 2.0)',
             opacity: 0
@@ -128,7 +128,7 @@
           transform: 'scale(1.0, 1.0)',
           opacity: 1
         }, {
-          transform: 'scale(2.0, 2.0)',
+          transform: 'scale(1.5, 1.5)',
           opacity: 0
         }], 100);
         ani.pause();

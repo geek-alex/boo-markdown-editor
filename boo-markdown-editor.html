@@ -14,18 +14,12 @@
       }
       .preview {
         display: block;
-        position: fixed;
         background-color: white;
-        overflow-Y: auto; 
-        bottom: 20px;
-        right: 20px;
-        width: 300px;
-        height: 200px;
         @apply --shadow-elevation-16dp;
         @apply --preview;
         @apply --markdown-preview;
       }
-      .preview>section {
+      [slot="markdown-html"] {
         padding: 10px;
       }
       [slot="markdown-html"] img {
@@ -36,7 +30,7 @@
       }
       .toolbar {
         background-color: grey;
-        position: absolute;
+        position: fixed;
         border-radius: 2px;
         max-width: 80%;
         max-height: 100px;
@@ -50,6 +44,8 @@
       .toolbar.opened {
         width: auto;
         height: auto;
+        padding-left: 10px;
+        padding-right: 10px;
         overflow: visible;
         @apply --shadow-elevation-2dp;
         @apply --markdown-toolbar;
@@ -64,7 +60,7 @@
         position: absolute;
         transform: rotate(45deg);
         top: -0.35em;
-        left: calc(50% - 0.36em);
+        left: 15px;
         display: inline-block;
         content: '';
       }
@@ -271,10 +267,9 @@
       _showToolbarChanged(showToolbar, old) {
         let toolbar = this.shadowRoot.querySelector('.toolbar');
         let _this = this;
-        let rect = toolbar.getBoundingClientRect();
         if (showToolbar) {
-          toolbar.style.left = (this.toolbarX - (rect.width / 2)) + 'px';
-          toolbar.style.top = this.toolbarY + 'px';
+          toolbar.style.left = _this.toolbarX + 'px';
+          toolbar.style.top = _this.toolbarY + 'px';
           let ani = toolbar.animate([{
             opacity: 0,
             width: '0px',
@@ -285,18 +280,21 @@
             width: _this._toolbarWidth + 'px',
             height: _this._toolbarHeight + 'px',
             transform: 'translateY(0px)'
-          }], 100);
+          }], 200);
           ani.onfinish = () => {
+            let rect = toolbar.getBoundingClientRect();
             _this._addClass(toolbar, 'opened');
             _this.dispatchEvent(new CustomEvent('toolbar-opened'));
           }
           ani.play();
           return;
         }
+        let rect = toolbar.getBoundingClientRect();
         this._toolbarWidth = rect.width;
         this._toolbarHeight = rect.height;
         if (old == undefined) {
           _this._removeClass(toolbar, 'opened');
+          _this.dispatchEvent(new CustomEvent('toolbar-closed'));
           return;
         }
         new Promise((resolved, reject) => {
@@ -341,8 +339,8 @@
             return;
           }
           let rect = editor.getBoundingClientRect();
-          _this.toolbarX = e.screenX - rect.left;
-          _this.toolbarY = e.screenY - rect.top - 60;
+          _this.toolbarX = e.clientX - 20;
+          _this.toolbarY = e.clientY + 20;
           _this.showToolbar = true;
           e.preventDefault();
         });
@@ -353,9 +351,9 @@
 
       _initPreview() {
         let booWindow = this.shadowRoot.querySelector('boo-window');
-        let viewSize = this._getWindowSize();
-        booWindow.x = viewSize.width - booWindow.width - 20;
-        booWindow.y = viewSize.height - booWindow.height - 20;
+        let pos = booWindow.bottomRight();
+        booWindow.x = pos.x - 20;
+        booWindow.y = pos.y - 20;
       }
 
       _getWindowSize () {
