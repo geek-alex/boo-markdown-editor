@@ -163,13 +163,16 @@
         let _this = this;
         window.addEventListener('resize', e => {
           _this._initPreview();
-          _this._initContextMenu();
         });
         this._initPreview();
         this._initContextMenu();
         this.editor = this.shadowRoot
           .querySelector('iron-autogrow-textarea')
           .shadowRoot.querySelector('#textarea');
+      }
+
+      update() {
+        this._initPreview();
       }
 
       insert(text) {
@@ -328,25 +331,29 @@
         let _this = this;
         let editor = this.shadowRoot.querySelector('iron-autogrow-textarea');
         editor.addEventListener('contextmenu', e => {
-          let contextmenu = false;
-          for(let i in _this.childNodes) {
-            if (_this.childNodes[i].tagName != undefined) {
-              contextmenu = true;
-              break;
-            }
-          }
-          if (!contextmenu) {
-            return;
-          }
-          let rect = editor.getBoundingClientRect();
-          _this.toolbarX = e.clientX - 20;
-          _this.toolbarY = e.clientY + 20;
-          _this.showToolbar = true;
+          _this.showToolbar(e.clientX, e.clientY);
           e.preventDefault();
         });
         editor.addEventListener('click', e => {
           _this.showToolbar = false;
         });
+      }
+
+      showToolbar(clientX, clientY) {
+        let contextmenu = false;
+        for(let i in this.childNodes) {
+          if (this.childNodes[i].tagName != undefined) {
+            contextmenu = true;
+            break;
+          }
+        }
+        if (!contextmenu) {
+          return;
+        }
+        let rect = this.editor.getBoundingClientRect();
+        this.toolbarX = clientX - 20;
+        this.toolbarY = clientY + 20;
+        this.showToolbar = true;
       }
 
       _initPreview() {
