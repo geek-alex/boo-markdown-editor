@@ -162,9 +162,9 @@
         super.connectedCallback();
         let _this = this;
         window.addEventListener('resize', e => {
-          _this._initPreview();
+          _this._resetPreview();
         });
-        this._initPreview();
+        this._resetPreview();
         this._initContextMenu();
         this.editor = this.shadowRoot
           .querySelector('iron-autogrow-textarea')
@@ -172,7 +172,7 @@
       }
 
       update() {
-        this._initPreview();
+        this._resetPreview();
       }
 
       insert(text) {
@@ -331,7 +331,7 @@
         let _this = this;
         let editor = this.shadowRoot.querySelector('iron-autogrow-textarea');
         editor.addEventListener('contextmenu', e => {
-          _this.showToolbar(e.clientX, e.clientY);
+          _this.showToolbarAt(e.clientX, e.clientY);
           e.preventDefault();
         });
         editor.addEventListener('click', e => {
@@ -339,7 +339,7 @@
         });
       }
 
-      showToolbar(clientX, clientY) {
+      showToolbarAt(clientX, clientY) {
         let contextmenu = false;
         for(let i in this.childNodes) {
           if (this.childNodes[i].tagName != undefined) {
@@ -356,11 +356,13 @@
         this.showToolbar = true;
       }
 
-      _initPreview() {
+      _resetPreview() {
         let booWindow = this.shadowRoot.querySelector('boo-window');
         let pos = booWindow.bottomRight();
         booWindow.x = pos.x - 20;
         booWindow.y = pos.y - 20;
+        booWindow.width = this.previewWidth;
+        booWindow.height = this.previewHeight;
       }
 
       _getWindowSize () {
