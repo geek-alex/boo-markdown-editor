@@ -28,7 +28,7 @@
         max-width: 100%;
       }
       .toolbar {
-        background-color: grey;
+        background-color: var(--primary-color);
         position: fixed;
         border-radius: 2px;
         max-width: 80%;
@@ -176,14 +176,6 @@
         this.editor = this.shadowRoot
           .querySelector('iron-autogrow-textarea')
           .shadowRoot.querySelector('#textarea');
-        this.update();
-        setTimeout(() => {
-          this.update();
-        }, 200);
-      }
-
-      update() {
-        this.previewUpdate();
       }
 
       insert(text) {
@@ -341,6 +333,7 @@
       _initContextMenu() {
         let _this = this;
         let editor = this.shadowRoot.querySelector('iron-autogrow-textarea');
+        console.log(editor);
         editor.addEventListener('contextmenu', e => {
           _this.showToolbarAt(e.clientX, e.clientY);
           e.preventDefault();
@@ -371,6 +364,7 @@
         let booWindow = this.shadowRoot.querySelector('boo-window');
         booWindow.width = this.previewWidth;
         booWindow.height = this.previewHeight;
+        booWindow.update();
       }
 
       _getWindowSize () {

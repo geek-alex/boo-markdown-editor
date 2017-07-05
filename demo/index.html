@@ -14,6 +14,7 @@
     <link rel="import" href="../tools/image.html">
     <link rel="import" href="../tools/help.html">
     <link rel="import" href="../tools/video.html">
+    <link rel="import" href="../tools/preview.html">
 
     <custom-style>
       <style is="custom-style" include="demo-pages-shared-styles">
@@ -25,10 +26,11 @@
       <h3>Basic boo-markdown-editor demo</h3>
       <demo-snippet>
         <template>
-          <boo-markdown-editor on-preview template-url="../template.md">
+          <boo-markdown-editor template-url="../template.md">
             <boo-markdown-tool-image></boo-markdown-tool-image>
             <boo-markdown-tool-video></boo-markdown-tool-video>
             <boo-markdown-tool-help></boo-markdown-tool-help>
+            <boo-markdown-tool-preview></boo-markdown-tool-preview>
           </boo-markdown-editor>
         </template>
       </demo-snippet>

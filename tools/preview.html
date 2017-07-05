@@ -1,0 +1,70 @@
+<link rel="import" href="../boo-markdown-tool.html">
+<link rel="import" href="../../iron-iconset-svg/iron-iconset-svg.html">
+<link rel="import" href="../../iron-icon/iron-icon.html">
+
+<iron-iconset-svg size="24" name="boo-markdown-tool-preview">
+  <svg>
+    <defs>
+      <g id="toggle">
+        <path d="M14 5c0-1.1-.9-2-2-2h-1V2c0-.55-.45-1-1-1H6c-.55 0-1 .45-1 1v1H4c-1.1 0-2 .9-2 2v15c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2h8V5h-8zm-2 13h-2v-2h2v2zm0-9h-2V7h2v2zm4 9h-2v-2h2v2zm0-9h-2V7h2v2zm4 9h-2v-2h2v2zm0-9h-2V7h2v2z"></path>
+      </g>
+    </defs>
+  </svg>
+</iron-iconset-svg>
+
+<dom-module id="boo-markdown-tool-preview">
+  <template>
+    <style>
+      iron-icon {
+        color: white;
+      }
+      iron-icon:hover {
+        cursor: pointer;
+      }
+      app-toolbar {
+        background-color: var(--primary-color);
+        font-size: 1em;
+        color: white;
+        height: 48px;
+      }
+      paper-button {
+        background-color: var(--primary-color);
+        color: white;
+      }
+      div.content {
+        @apply --shadow-elevation-6dp;
+        width: 280px;
+      }
+      div.content>div {
+        overflow: hidden;
+        padding: 10px;
+      }
+      paper-dropdown-menu {
+        width: 100%;
+      }
+      .cr {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+      }
+    </style>
+    <iron-icon 
+      slot="dropdown-trigger"
+      icon="boo-markdown-tool-preview:toggle" 
+      title="打开/关闭预览"
+      on-click="togglePreview"></iron-icon>
+  </template>
+  <script>
+    class BooMarkdownToolPreview extends BooMarkdownTool {
+
+      static get is() { return 'boo-markdown-tool-preview'; }
+
+      togglePreview() {
+        this.markedEditor.noPreview = !this.markedEditor.noPreview;
+        this.markedEditor.showToolbar = false;
+      }
+    }
+
+    window.customElements.define(BooMarkdownToolPreview.is, BooMarkdownToolPreview);
+  </script>
+</dom-module>
