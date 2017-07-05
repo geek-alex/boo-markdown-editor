@@ -81,16 +81,24 @@
     <iron-autogrow-textarea 
       rows=[[rows]] 
       value={{content}}></iron-autogrow-textarea>
-    <boo-window class="preview" width=[[previewWidth]] height=[[previewHeight]]>
-      <section slot="header">
-        <marked-element markdown=[[content]]>
-          <div slot="markdown-html"></div>
-        </marked-element>
-      </section>
-    </boo-window>
-  </template>
+      <boo-window 
+        class="preview" 
+        opened=[[!noPreview]]
+        pos-policy="bottom-right" 
+        fix-x="-20"
+        fix-y="-20"
+        width=[[previewWidth]] 
+        height=[[previewHeight]]>
 
-  <script>
+        <section slot="header">
+          <marked-element markdown=[[content]]>
+            <div slot="markdown-html"></div>
+          </marked-element>
+        </section>
+      </boo-window>
+    </template>
+
+    <script>
 
     /**
      * `boo-markdown-editor`
@@ -130,10 +138,11 @@
           toolbarY: {
             type: Number,
           },
-          preview: {
+          noPreview: {
             type: Boolean,
             reflectToAttribute: true,
-            notify: true
+            notify: true,
+            value: false
           },
           previewWidth: {
             type: Number,
@@ -161,17 +170,20 @@
         super.connectedCallback();
         let _this = this;
         window.addEventListener('resize', e => {
-          _this._resetPreview();
+          _this.previewUpdate();
         });
-        this._resetPreview();
         this._initContextMenu();
         this.editor = this.shadowRoot
           .querySelector('iron-autogrow-textarea')
           .shadowRoot.querySelector('#textarea');
+        this.update();
+        setTimeout(() => {
+          this.update();
+        }, 200);
       }
 
       update() {
-        this._resetPreview();
+        this.previewUpdate();
       }
 
       insert(text) {
@@ -201,7 +213,7 @@
         if ("selectionStart" in editor) {
           editor.selectionStart = start;
           editor.selectionEnd = end;
-          return this;;
+          return this;
         }
         if (editor.createTextRange) {
           var rng = editor.createTextRange();
@@ -355,11 +367,8 @@
         this.showToolbar = true;
       }
 
-      _resetPreview() {
+      previewUpdate() {
         let booWindow = this.shadowRoot.querySelector('boo-window');
-        let pos = booWindow.bottomRight();
-        booWindow.x = pos.x - 20;
-        booWindow.y = pos.y - 20;
         booWindow.width = this.previewWidth;
         booWindow.height = this.previewHeight;
       }
