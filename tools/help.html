@@ -55,7 +55,7 @@
       title="帮助"
       on-click="_openHelpWindow"></iron-icon>
 
-    <boo-window>
+    <boo-window pos-policy="center">
       <app-toolbar class="header" slot="header">
         <paper-tabs selected={{selected}}>
           <paper-tab>Markdown语法</paper-tab>
@@ -112,30 +112,10 @@
           let rect = helpWindow.getBoundingClientRect();
           let screenSize = this.getScreenSize();
           helpWindow.style.display = 'block';
-          helpWindow.width = Math.max(screenSize.width / 2, 600);
-          helpWindow.height = Math.max(screenSize.height / 2, 500);
-          helpWindow.posPolicy = POS_CENTER;
-          helpWindow.animate([{
-            transform: 'scale(2.0, 2.0)',
-            opacity: 0
-          }, {
-            transform: 'scale(1.0, 1.0)',
-            opacity: 1
-          }], 100);
-          return;
+          helpWindow.width = Math.min(screenSize.width - 10, 600);
+          helpWindow.height = Math.min(screenSize.height - 10, 500);
         }
-        let ani = helpWindow.animate([{
-          transform: 'scale(1.0, 1.0)',
-          opacity: 1
-        }, {
-          transform: 'scale(1.5, 1.5)',
-          opacity: 0
-        }], 100);
-        ani.pause();
-        ani.onfinish = () => {
-          helpWindow.style.display = 'none';
-        };
-        ani.play();
+        helpWindow.opened = opened;
       }
 
       _selectedChanged(selected) {
