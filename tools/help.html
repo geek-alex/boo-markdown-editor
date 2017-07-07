@@ -26,16 +26,15 @@
   <template>
     <style>
       iron-icon {
+        display: block;
         color: white;
-        margin-left: 5px;
-        margin-right: 5px;
+        padding: 5px;
       }
       iron-icon:hover {
         cursor: pointer;
       }
       boo-window {
         @apply --shadow-elevation-6dp;
-        display: none;
       }
       app-toolbar {
         @apply --layout-horizontal;
@@ -57,7 +56,7 @@
       title="帮助"
       on-click="_openHelpWindow"></iron-icon>
 
-    <boo-window pos-policy="center">
+    <boo-window pos-policy="center" opened={{helpOpened}} width="600" height="500">
       <app-toolbar class="header" slot="header">
         <paper-tabs selected={{selected}}>
           <paper-tab>Markdown语法</paper-tab>
@@ -87,7 +86,6 @@
           helpOpened: {
             type: Boolean,
             value: false,
-            observer: '_helpOpenedChanged',
             notify: true,
             reflectToAttribute: true
           },
@@ -106,19 +104,6 @@
 
       _closeHelpWindow() {
         this.helpOpened = false;
-      }
-
-      _helpOpenedChanged(opened) {
-        let helpWindow = this.shadowRoot.querySelector('boo-window');
-        if (opened) {
-          let rect = helpWindow.getBoundingClientRect();
-          let screenSize = this.getScreenSize();
-          helpWindow.style.display = 'block';
-          helpWindow.width = Math.min(screenSize.width - 10, 600);
-          helpWindow.height = Math.min(screenSize.height - 10, 500);
-          helpWindow.update();
-        }
-        helpWindow.opened = opened;
       }
 
       _selectedChanged(selected) {

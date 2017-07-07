@@ -1,13 +1,12 @@
 <link rel="import" href="../boo-markdown-tool.html">
 <link rel="import" href="../../iron-iconset-svg/iron-iconset-svg.html">
 <link rel="import" href="../../iron-icon/iron-icon.html">
-<link rel="import" href="../../paper-menu-button/paper-menu-button.html">
 <link rel="import" href="../../paper-styles/shadow.html">
 <link rel="import" href="../../app-layout/app-toolbar/app-toolbar.html">
 <link rel="import" href="../../paper-input/paper-input.html">
+<link rel="import" href="../../paper-button/paper-button.html">
 <link rel="import" href="../../paper-listbox/paper-listbox.html">
 <link rel="import" href="../../paper-item/paper-item.html">
-<link rel="import" href="../../paper-button/paper-button.html">
 <link rel="import" href="../../paper-dropdown-menu/paper-dropdown-menu.html">
 
 <iron-iconset-svg size="24" name="boo-markdown-tool-video">
@@ -25,27 +24,31 @@
     <style>
       iron-icon {
         color: white;
+        padding: 5px;
       }
       iron-icon:hover {
         cursor: pointer;
       }
       app-toolbar {
+        @apply --layout-horizontal;
+        @apply --layout-justified;
+        height: 52px;
         background-color: var(--primary-color);
-        font-size: 1em;
         color: white;
-        height: 48px;
+      }
+      app-toolbar>span {
+        font-size: .7em;
       }
       paper-button {
         background-color: var(--primary-color);
         color: white;
       }
-      div.content {
-        @apply --shadow-elevation-6dp;
-        width: 280px;
-      }
       div.content>div {
         overflow: hidden;
         padding: 10px;
+      }
+      boo-window {
+        @apply --shadow-elevation-6dp;
       }
       paper-dropdown-menu {
         width: 100%;
@@ -56,32 +59,32 @@
         align-items: flex-end;
       }
     </style>
-    <paper-menu-button>
-      <iron-icon 
-        slot="dropdown-trigger"
-        icon="boo-markdown-tool-video:video" 
-        title="插入视频"
-        on-click="_openHelpWindow"></iron-icon>
-      <div class="content" slot="dropdown-content">
-        <app-toolbar>
-          <span>添加视频</span>
-        </app-toolbar>
-        <div>
-          <paper-input label="视频地址" value={{src}}></paper-input>
-          <paper-input label="预览图" value={{poster}}></paper-input>
-          <div class="cr">
-            <paper-dropdown-menu label="视频类型">
-              <paper-listbox slot="dropdown-content" attr-for-selected="value" selected={{type}}>
-                <paper-item value="video/mp4">MP4</paper-item>
-                <paper-item value="video/webm">WEBM</paper-item>
-                <paper-item value="video/ogg">OGV</paper-item>
-              </paper-listbox>
-            </paper-dropdown-menu>
-            <paper-button raised on-click="insertVideo">插入</paper-button>
-          </div>
+    <iron-icon 
+      icon="boo-markdown-tool-video:video" 
+      title="插入视频"
+      on-click="_openWindow"></iron-icon>
+
+    <boo-window pos-policy="center" opened={{opened}} width="400" height="300">
+      <app-toolbar class="header" slot="header">
+        <span>添加视频</span>
+        <paper-icon-button icon="boo-markdown-tool-help:close"
+          on-click="_closeWindow"></paper-icon-button>
+      </app-toolbar>
+      <div class="content" slot="content">
+        <paper-input label="视频地址" value={{src}}></paper-input>
+        <paper-input label="预览图" value={{poster}}></paper-input>
+        <div class="cr">
+          <paper-dropdown-menu label="视频类型">
+            <paper-listbox slot="dropdown-content" attr-for-selected="value" selected={{type}}>
+              <paper-item value="video/mp4">MP4</paper-item>
+              <paper-item value="video/webm">WEBM</paper-item>
+              <paper-item value="video/ogg">OGV</paper-item>
+            </paper-listbox>
+          </paper-dropdown-menu>
+          <paper-button raised on-click="insertVideo">插入</paper-button>
         </div>
       </div>
-    </paper-menu-button>
+    </boo-window>
   </template>
   <script>
     class BooMarkdownToolVideo extends BooMarkdownTool {
@@ -92,6 +95,10 @@
         return {
           src: {
             type: String,
+          },
+          opened: {
+            type: Boolean,
+            value: false,
           },
           type: {
             type: String,
@@ -116,6 +123,15 @@
         this.type = "video/mp4";
 
         this.markedEditor.showToolbar = false;
+      }
+
+      _openWindow() {
+        this.markedEditor.showToolbar = false;
+        this.opened = true;
+      }
+
+      _closeWindow() {
+        this.opened = false;
       }
     }
 

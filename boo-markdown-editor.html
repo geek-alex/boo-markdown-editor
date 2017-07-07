@@ -1,9 +1,22 @@
 <link rel="import" href="../polymer/polymer-element.html">
+<link rel="import" href="../iron-iconset-svg/iron-iconset-svg.html">
+<link rel="import" href="../iron-media-query/iron-media-query.html">
 <link rel="import" href="../paper-styles/element-styles/paper-material-styles.html">
+<link rel="import" href="../paper-fab/paper-fab.html">
 <link rel="import" href="../marked-element/marked-element.html">
 <link rel="import" href="../iron-autogrow-textarea/iron-autogrow-textarea.html">
 <link rel="import" href="../iron-ajax/iron-ajax.html">
 <link rel="import" href="../boo-window/boo-window.html">
+
+<iron-iconset-svg size="24" name="boo-markdown-editor">
+  <svg>
+    <defs>
+      <g id="menu">
+        <g id="menu"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"></path></g>
+      </g>
+    </defs>
+  </svg>
+</iron-iconset-svg>
 
 <dom-module id="boo-markdown-editor">
   <template>
@@ -21,6 +34,13 @@
       [slot="markdown-html"] {
         padding: 10px;
       }
+      paper-fab {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        z-index: 100000;
+        background-color: var(--primary-color);
+      }
       [slot="markdown-html"] img {
         max-width: 100%;
       }
@@ -37,19 +57,19 @@
         height: 0px;
         display: block;
         overflow: hidden;
-        z-index: 1000000;
+        z-index: 10000;
         white-space: nowrap;
+        @apply --layout-horizontal;
+        @apply --layout-center;
       }
       .toolbar.opened {
         width: auto;
         height: auto;
-        padding-left: 10px;
-        padding-right: 10px;
+        padding: 5px;
         overflow: visible;
         @apply --shadow-elevation-2dp;
         @apply --markdown-toolbar;
       }
-
       .toolbar.opened::before {
         width: 0.625em;
         height: 0.625em;
@@ -69,12 +89,30 @@
         height: 100%;
         background-color: rgba(0, 0, 0, 0);
       }
+      @media (max-width: 767px) {
+        .toolbar {
+          display: block;
+          padding-bottom: 10px;
+          padding-top: 10px;
+          bottom: 85px;
+          left: 25px;
+          @apply --layout-vertical;
+          @apply --layout-center;
+        }
+        .toolbar.opened::before {
+          top: calc(100% - 0.35em);
+          left: calc(50% - 0.35em);
+        }
+      }
     </style>
     <iron-ajax 
       auto
       url=[[templateUrl]]
       handle-as="text"
       on-response="_templateRender"></iron-ajax>
+      <iron-media-query 
+        query="(max-width: 767px)" 
+        query-matches="{{smallScreen}}"></iron-media-query>
     <div class="toolbar">
       <slot></slot>
     </div>
@@ -96,6 +134,9 @@
           </marked-element>
         </section>
       </boo-window>
+      <template is="dom-if" if=[[smallScreen]]>
+        <paper-fab icon="boo-markdown-editor:menu" on-click="_toggleToolbar"></paper-fab>
+      </template>
     </template>
 
     <script>
@@ -132,6 +173,9 @@
             notify: true,
             observer: '_showToolbarChanged'
           },
+          smallScreen: {
+            type: Boolean,
+          },
           toolbarX: {
             type: Number,
           },
@@ -142,7 +186,6 @@
             type: Boolean,
             reflectToAttribute: true,
             notify: true,
-            value: false
           },
           previewWidth: {
             type: Number,
@@ -176,6 +219,12 @@
         this.editor = this.shadowRoot
           .querySelector('iron-autogrow-textarea')
           .shadowRoot.querySelector('#textarea');
+        if (this.smallScreen) {
+          this.noPreview = true;
+          this.previewUpdate();
+        } else {
+          this.noPreview = false;
+        }
       }
 
       insert(text) {
@@ -334,6 +383,9 @@
         let _this = this;
         let editor = this.shadowRoot.querySelector('iron-autogrow-textarea');
         editor.addEventListener('contextmenu', e => {
+          if (_this.smallScreen) {
+            return;
+          }
           _this.showToolbarAt(e.clientX, e.clientY);
           e.preventDefault();
         });
@@ -359,8 +411,19 @@
         this.showToolbar = true;
       }
 
+      _toggleToolbar() {
+        this.showToolbar = !this.showToolbar; 
+      }
+
       previewUpdate() {
         let booWindow = this.shadowRoot.querySelector('boo-window');
+        if (this.smallScreen) {
+          booWindow.width = this._getWindowSize().width; 
+          booWindow.height = this._getWindowSize().height; 
+          booWindow.x = 0; 
+          booWindow.y = 0; 
+          return;
+        }
         booWindow.width = this.previewWidth;
         booWindow.height = this.previewHeight;
         booWindow.update();
