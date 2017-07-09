@@ -1,6 +1,7 @@
 <link rel="import" href="../boo-markdown-tool.html">
 <link rel="import" href="../../iron-iconset-svg/iron-iconset-svg.html">
 <link rel="import" href="../../iron-icon/iron-icon.html">
+<link rel="import" href="../boo-markdown-tool-style.html">
 
 <iron-iconset-svg size="24" name="boo-markdown-tool-image">
   <svg>
@@ -14,17 +15,9 @@
 
 <dom-module id="boo-markdown-tool-image">
   <template>
-    <style>
-      iron-icon {
-        color: white;
-        display: block;
-        padding: 5px;
-      }
-      iron-icon:hover {
-        cursor: pointer;
-      }
-    </style>
+    <style include="boo-markdown-tool-style"></style>
     <iron-icon 
+      class="tool-toggle"
       title="添加图片"
       icon="boo-markdown-tool-image:icon" 
       on-click="_openSelector"></iron-icon>

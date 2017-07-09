@@ -8,6 +8,7 @@
 <link rel="import" href="../../paper-listbox/paper-listbox.html">
 <link rel="import" href="../../paper-item/paper-item.html">
 <link rel="import" href="../../paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="../boo-markdown-tool-style.html">
 
 <iron-iconset-svg size="24" name="boo-markdown-tool-video">
   <svg>
@@ -21,14 +22,7 @@
 
 <dom-module id="boo-markdown-tool-video">
   <template>
-    <style>
-      iron-icon {
-        color: white;
-        padding: 5px;
-      }
-      iron-icon:hover {
-        cursor: pointer;
-      }
+    <style include="boo-markdown-tool-style">
       app-toolbar {
         @apply --layout-horizontal;
         @apply --layout-justified;
@@ -60,6 +54,7 @@
       }
     </style>
     <iron-icon 
+      class="tool-toggle"
       icon="boo-markdown-tool-video:video" 
       title="插入视频"
       on-click="_openWindow"></iron-icon>

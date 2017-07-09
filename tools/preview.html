@@ -1,6 +1,7 @@
 <link rel="import" href="../boo-markdown-tool.html">
 <link rel="import" href="../../iron-iconset-svg/iron-iconset-svg.html">
 <link rel="import" href="../../iron-icon/iron-icon.html">
+<link rel="import" href="../boo-markdown-tool-style.html">
 
 <iron-iconset-svg size="24" name="boo-markdown-tool-preview">
   <svg>
@@ -14,12 +15,7 @@
 
 <dom-module id="boo-markdown-tool-preview">
   <template>
-    <style>
-      iron-icon {
-        color: white;
-        display: block;
-        padding: 5px;
-      }
+    <style include="boo-markdown-tool-style">
       iron-icon:hover {
         cursor: pointer;
       }
@@ -51,6 +47,7 @@
       }
     </style>
     <iron-icon 
+      class="tool-toggle"
       slot="dropdown-trigger"
       icon="boo-markdown-tool-preview:toggle" 
       title="打开/关闭预览"

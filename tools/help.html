@@ -8,6 +8,7 @@
 <link rel="import" href="../../paper-tabs/paper-tab.html">
 <link rel="import" href="../../paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../../paper-styles/shadow.html">
+<link rel="import" href="../boo-markdown-tool-style.html">
 
 <iron-iconset-svg size="24" name="boo-markdown-tool-help">
   <svg>
@@ -24,12 +25,7 @@
 
 <dom-module id="boo-markdown-tool-help">
   <template>
-    <style>
-      iron-icon {
-        display: block;
-        color: white;
-        padding: 5px;
-      }
+    <style include="boo-markdown-tool-style">
       iron-icon:hover {
         cursor: pointer;
       }
@@ -52,6 +48,7 @@
       }
     </style>
     <iron-icon 
+      class="tool-toggle"
       icon="boo-markdown-tool-help:help" 
       title="帮助"
       on-click="_openHelpWindow"></iron-icon>
