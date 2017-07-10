@@ -49,7 +49,7 @@
         position: fixed;
         bottom: 20px;
         left: 20px;
-        z-index: 1000;
+        z-index: 1;
         background-color: var(--primary-color);
       }
       [slot="markdown-html"] img {
@@ -135,14 +135,14 @@
         fix-y="-20"
         width=[[previewWidth]] 
         height=[[previewHeight]]>
-        <template is="dom-if" if=[[smallScreen]]>
-          <app-toolbar class="header" slot="header">
-            <span>预览</span>
-            <paper-icon-button icon="boo-markdown-editor:close"
-              on-click="_closePreview"></paper-icon-button>
-          </app-toolbar>
-        </template>
         <section slot="header">
+          <template is="dom-if" if=[[smallScreen]]>
+            <app-toolbar class="header" slot="header">
+              <span>预览</span>
+              <paper-icon-button icon="boo-markdown-editor:close"
+                on-click="_closePreview"></paper-icon-button>
+            </app-toolbar>
+          </template>
           <marked-element markdown=[[content]]>
             <div slot="markdown-html"></div>
           </marked-element>
