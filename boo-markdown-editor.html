@@ -5,8 +5,10 @@
 <link rel="import" href="../paper-fab/paper-fab.html">
 <link rel="import" href="../marked-element/marked-element.html">
 <link rel="import" href="../iron-autogrow-textarea/iron-autogrow-textarea.html">
+<link rel="import" href="../iron-a11y-keys/iron-a11y-keys.html">
 <link rel="import" href="../iron-ajax/iron-ajax.html">
 <link rel="import" href="../boo-window/boo-window.html">
+<link rel="import" href="../marked/lib/marked.js">
 
 <iron-iconset-svg size="24" name="boo-markdown-editor">
   <svg>
@@ -31,6 +33,7 @@
       .preview {
         display: block;
         background-color: white;
+        overflow: hidden;
         @apply --shadow-elevation-16dp;
         @apply --markdown-preview;
       }
@@ -38,9 +41,10 @@
         @apply --layout-horizontal;
         @apply --layout-justified;
         background-color: var(--primary-color);
+        box-shadow: 0px 0px 7px rgba(0, 0, 0, .5);
         font-size: 1em;
         color: white;
-        height: 48px;
+        height: 54px;
       }
       [slot="markdown-html"] {
         padding: 10px;
@@ -130,6 +134,7 @@
     </div>
     <iron-autogrow-textarea 
       rows=[[rows]] 
+      on-click="onClick"
       value={{content}}></iron-autogrow-textarea>
       <boo-window 
         class="preview" 
@@ -155,8 +160,10 @@
       <template is="dom-if" if=[[smallScreen]]>
         <paper-fab icon="boo-markdown-editor:menu" on-click="_toggleToolbar"></paper-fab>
       </template>
+      <iron-a11y-keys id="a11y" 
+        target="[[editor]]" keys="enter"
+        on-keys-pressed="_onEnter"></iron-a11y-keys>
     </template>
-
     <script>
 
     /**
@@ -177,6 +184,9 @@
             type: String,
             reflectToAttribute: true,
             notify: true
+          },
+          marked: {
+            type: Object,
           },
           editor: {
             type: Object,
@@ -226,6 +236,22 @@
             type: Number,
             reflectToAttribute: true,
             value: 5
+          },
+          /**
+           * vim 模式
+           * command|edit
+           */
+          _mode: {
+            type: String,
+            value: 'command'
+          },
+          _command: {
+            type: String,
+            value: ''
+          },
+          _rowOffset: {
+            type: Number,
+            value: 0
           }
         };
       }
@@ -248,6 +274,20 @@
         } else {
           this.noPreview = false;
         }
+        this.marked = marked;
+        this.editor.addEventListener('keyup', (e) => {
+          if (e.key == 'Escape') {
+            _this._command = '';
+            _this._mode = 'command';
+            return;
+          }
+          if (_this._mode == 'command') {
+            _this._command += e.key;
+            _this._dispathCommand();
+            console.log(_this._mode);
+            return false;
+          }
+        });
       }
 
       insert(text) {
@@ -267,6 +307,67 @@
         this.select(start, end);
         let _this = this;
         _this.insert(text);
+      }
+
+      onClick() {
+        console.log(this.currentRow());
+        this.deleteRow(this.currentRow());
+      }
+
+      currentRow() {
+        let rows = this.content.split("\n");
+        let selectedStart = this.getSelectedStart();
+        for(let i in rows) {
+          if (selectedStart <= 0) {
+            return --i;
+          }
+          selectedStart -= (rows[i].length + 1);
+        }
+
+        return rows.length;
+      }
+
+      rowOffset() {
+        let rows = this.content.split("\n");
+        let selectedStart = this.getSelectedStart();
+        for(let i in rows) {
+          if (selectedStart <= rows[i].length) {
+            return selectedStart;
+          }
+          selectedStart -= (rows[i].length + 1);
+        }
+        return 0;
+      }
+
+      selectRow(row, prefix, suffix) {
+        let rows = this.content.split("\n");
+        let rowStart = 0;
+        let rowEnd = 0;
+        for(let i in rows) {
+          if (i < row) {
+            rowStart += rows[i].length + 1;
+            rowEnd += rows[i].length + 1;
+            continue;
+          }
+          if (i == row) {
+            rowEnd += rows[i].length + 1;
+            break;
+          }
+        }
+        this.select(rowStart + (prefix || 0), rowEnd + (suffix || 0));
+      }
+
+      rowLength(row) {
+        let rows = this.content.split("\n");
+        if (rows[row]) {
+          return rows[row].length + 1;
+        }
+        return 0;
+      }
+
+      deleteRow(row) {
+        this.selectRow(row, -1);
+        this.insert("\n");
       }
 
       select(start, end) {
@@ -289,57 +390,127 @@
         return this;
       }
 
-      /**
-       * 返回当前选区的开始和结束
-       */
-      _getRange(inputElem) {
-        var start = 0, end = 0, normalizedValue, range,
-            textInputRange, len, endRange;
-
-        if (typeof inputElem.selectionStart == "number" && 
-                              typeof inputElem.selectionEnd == "number") {
-          return {
-            start: inputElem.selectionStart,
-            end: inputElem.selectionEnd,
-          };
+      getSelectedStart() {
+        let editor = this.editor;
+        if ("selectionStart" in editor) {
+          return editor.selectionStart;
         }
-        range = document.selection.createRange();
-        if (range && range.parentElement() == inputElem) {
-          len = inputElem.value.length;
-          normalizedValue = inputElem.value.replace(/\r\n/g, "\n");
+        console.log("error");
+      }
 
-          // Create a working TextRange that lives only in the input
-          textInputRange = inputElem.createTextRange();
-          textInputRange.moveToBookmark(range.getBookmark());
-
-          // Check if the start and end of the selection are at the very end
-          // of the input, since moveStart/moveEnd doesn't return what we want
-          // in those cases
-          endRange = inputElem.createTextRange();
-          endRange.collapse(false);
-
-          if (textInputRange.compareEndPoints("StartToEnd", endRange) > -1) {
-            return {
-              start: len,
-              end: len
-            };
+      showToolbarAt(clientX, clientY) {
+        let contextmenu = false;
+        for(let i in this.childNodes) {
+          if (this.childNodes[i].tagName != undefined) {
+            contextmenu = true;
+            break;
           }
-          start = -textInputRange.moveStart("character", -len);
-          start += normalizedValue.slice(0, start).split("\n").length - 1;
-
-          if (textInputRange.compareEndPoints("EndToEnd", endRange) > -1) {
-            return {
-              start: start,
-              end: len
-            };
-          }
-          end = -textInputRange.moveEnd("character", -len);
-          end += normalizedValue.slice(0, end).split("\n").length - 1;
         }
-        return {
-            start: start,
-            end: end
-        };
+        if (!contextmenu) {
+          return;
+        }
+        let rect = this.editor.getBoundingClientRect();
+        this.toolbarX = clientX - 20;
+        this.toolbarY = clientY + 20;
+        this.showToolbar = true;
+      }
+
+      _toggleToolbar() {
+        this.showToolbar = !this.showToolbar; 
+      }
+
+      previewUpdate() {
+        let booWindow = this.shadowRoot.querySelector('boo-window');
+        if (this.smallScreen) {
+          booWindow.width = this._getWindowSize().width; 
+          booWindow.height = this._getWindowSize().height; 
+          booWindow.x = 0; 
+          booWindow.y = 0; 
+          return;
+        }
+        booWindow.width = this.previewWidth;
+        booWindow.height = this.previewHeight;
+        booWindow.update();
+      }
+
+      _getWindowSize () {
+        var result = {};
+        if (document.documentElement.clientWidth) {
+          result.width = document.documentElement.clientWidth;
+        } else {
+          result.width = document.body.clientWidth;
+        }
+        if (document.documentElement.clientHeight) {
+          result.height = document.documentElement.clientHeight;
+        } else {
+          result.height = document.body.clientHeight;
+        }
+        return result;
+      }
+
+      _addClass(node, klass) {
+
+        let klasses = node.getAttribute('class').split(' ');
+        klasses.push(klass);
+        node.setAttribute('class', klasses.join(' '));
+      }
+
+      _removeClass(node, klass) {
+
+        let klasses = node.getAttribute('class').split(' ');
+        let index = klasses.indexOf(klass);
+        if (index == -1) {
+          return; 
+        }
+        klasses.splice(index, 1);
+        node.setAttribute('class', klasses.join(' '));
+      }
+
+      _closePreview() {
+        this.noPreview = true;
+      }
+
+      _dispathCommand() {
+        let pos = this.getSelectedStart();
+        switch (this._command) {
+          case 'a':
+            this._mode = 'edit';
+            this.select(pos, pos);
+            break;
+          case 'i':
+            this._mode = 'edit';
+            this.select(pos - 1, pos - 1);
+            break;
+          case 'j':
+            let currentRow = this.currentRow();
+            let length = this.rowLength(currentRow++);
+            let rowOffset = Math.min(this.rowOffset(), length);
+            this.selectRow(currentRow, rowOffset, length - rowOffset);
+            break;
+        }
+      }
+
+      _onEnter(e) {
+        // this.selectRow(3);
+        // let lexer = this.marked.lexer(this.content);
+        // let blockType = ['list_item_start'];
+        // let lastBlock = '';
+        // let current = this.getSelectedStart();
+        // for(let i in lexer) {
+        //   if (blockType.indexOf(lexer[i].type) != -1) {
+        //     lastBlock = lexer[i].type; 
+        //   }
+        //   if (lexer[i].text) {
+        //     current -= lexer[i].text.length;
+        //   }
+        //   if (current <= 0) {
+        //     break;
+        //   }
+        // }
+        // if (lastBlock == 'list_item_start') {
+        //   this.insert("\n* ");
+        //   return false;
+        // }
       }
 
       _showToolbarChanged(showToolbar, old) {
@@ -416,77 +587,6 @@
         });
       }
 
-      showToolbarAt(clientX, clientY) {
-        let contextmenu = false;
-        for(let i in this.childNodes) {
-          if (this.childNodes[i].tagName != undefined) {
-            contextmenu = true;
-            break;
-          }
-        }
-        if (!contextmenu) {
-          return;
-        }
-        let rect = this.editor.getBoundingClientRect();
-        this.toolbarX = clientX - 20;
-        this.toolbarY = clientY + 20;
-        this.showToolbar = true;
-      }
-
-      _toggleToolbar() {
-        this.showToolbar = !this.showToolbar; 
-      }
-
-      previewUpdate() {
-        let booWindow = this.shadowRoot.querySelector('boo-window');
-        if (this.smallScreen) {
-          booWindow.width = this._getWindowSize().width; 
-          booWindow.height = this._getWindowSize().height; 
-          booWindow.x = 0; 
-          booWindow.y = 0; 
-          return;
-        }
-        booWindow.width = this.previewWidth;
-        booWindow.height = this.previewHeight;
-        booWindow.update();
-      }
-
-      _getWindowSize () {
-        var result = {};
-        if (document.documentElement.clientWidth) {
-          result.width = document.documentElement.clientWidth;
-        } else {
-          result.width = document.body.clientWidth;
-        }
-        if (document.documentElement.clientHeight) {
-          result.height = document.documentElement.clientHeight;
-        } else {
-          result.height = document.body.clientHeight;
-        }
-        return result;
-      }
-
-      _addClass(node, klass) {
-
-        let klasses = node.getAttribute('class').split(' ');
-        klasses.push(klass);
-        node.setAttribute('class', klasses.join(' '));
-      }
-
-      _removeClass(node, klass) {
-
-        let klasses = node.getAttribute('class').split(' ');
-        let index = klasses.indexOf(klass);
-        if (index == -1) {
-          return; 
-        }
-        klasses.splice(index, 1);
-        node.setAttribute('class', klasses.join(' '));
-      }
-
-      _closePreview() {
-        this.noPreview = true;
-      }
     }
 
     window.customElements.define(BooMarkdownEditor.is, BooMarkdownEditor);

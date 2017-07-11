@@ -23,16 +23,6 @@
 <dom-module id="boo-markdown-tool-video">
   <template>
     <style include="boo-markdown-tool-style">
-      app-toolbar {
-        @apply --layout-horizontal;
-        @apply --layout-justified;
-        height: 52px;
-        background-color: var(--primary-color);
-        color: white;
-      }
-      app-toolbar>span {
-        font-size: .7em;
-      }
       paper-button {
         background-color: var(--primary-color);
         color: white;
@@ -43,6 +33,9 @@
       }
       boo-window {
         @apply --shadow-elevation-6dp;
+      }
+      paper-input {
+        margin: 0px 10px;
       }
       paper-dropdown-menu {
         width: 100%;
@@ -60,7 +53,7 @@
       on-click="_openWindow"></iron-icon>
 
     <boo-window pos-policy="center" opened={{opened}} width="400" height="300">
-      <app-toolbar class="header" slot="header">
+      <app-toolbar class="toolbar" slot="header">
         <span>添加视频</span>
         <paper-icon-button icon="boo-markdown-tool-help:close"
           on-click="_closeWindow"></paper-icon-button>

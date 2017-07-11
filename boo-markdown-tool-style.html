@@ -7,10 +7,22 @@
         display: inline-block;
         white-space: nowrap;
       }
+      .toolbar {
+        height: 54px;
+        background-color: var(--primary-color);
+        box-shadow: 0px 0px 7px rgba(0, 0, 0, .5);
+        color: white;
+        font-size: 1em;
+        @apply --layout-horizontal;
+        @apply --layout-justified;
+      }
       .tool-toggle {
         color: white;
         padding: 5px;
         display: block;
+      }
+      .tool-toggle:hover {
+        cursor: pointer; 
       }
       @media (max-width: 767px) {
         :host {
