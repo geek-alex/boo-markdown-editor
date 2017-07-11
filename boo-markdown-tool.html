@@ -39,6 +39,16 @@
         }
         return result;
       }
+
+      _changeStatusBar() {
+        let themeColor = document.querySelector('[name=theme-color]');
+        if (!themeColor) {
+          themeColor = document.createElement('meta');
+          themeColor.setAttribute('name', 'theme-color');
+          document.getElementsByTagName('head')[0].appendChild(themeColor);
+        }
+        themeColor.setAttribute('content', '#3f51b5');
+      }
     }
   </script>
 </dom-module>

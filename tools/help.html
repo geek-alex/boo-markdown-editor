@@ -46,7 +46,10 @@
       title="帮助"
       on-click="_openHelpWindow"></iron-icon>
 
-    <boo-window pos-policy="center" opened={{helpOpened}} width="600" height="500">
+    <boo-window 
+      on-window-opened="_changeStatusBar"
+      pos-policy="center" 
+      opened={{helpOpened}} width="600" height="500">
       <app-toolbar class="toolbar" slot="header">
         <paper-tabs selected={{selected}}>
           <paper-tab>Markdown语法</paper-tab>

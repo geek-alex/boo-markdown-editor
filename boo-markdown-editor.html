@@ -134,7 +134,6 @@
     </div>
     <iron-autogrow-textarea 
       rows=[[rows]] 
-      on-click="onClick"
       value={{content}}></iron-autogrow-textarea>
       <boo-window 
         class="preview" 
@@ -263,11 +262,8 @@
           _this.previewUpdate();
         });
         this._initContextMenu();
-        this.editor = this.shadowRoot
-          .querySelector('iron-autogrow-textarea')
-          .shadowRoot.querySelector('#textarea');
-        this.toolbar = this.shadowRoot
-          .querySelector('.toolbar');
+        this.editor = this.shadowRoot.querySelector('iron-autogrow-textarea').textarea;
+        this.toolbar = this.shadowRoot.querySelector('.toolbar');
         if (this.smallScreen) {
           this.noPreview = true;
           this.previewUpdate();
@@ -275,19 +271,20 @@
           this.noPreview = false;
         }
         this.marked = marked;
-        this.editor.addEventListener('keyup', (e) => {
-          if (e.key == 'Escape') {
-            _this._command = '';
-            _this._mode = 'command';
-            return;
-          }
-          if (_this._mode == 'command') {
-            _this._command += e.key;
-            _this._dispathCommand();
-            console.log(_this._mode);
-            return false;
-          }
-        });
+        this.editor.oninput = this._input;
+      }
+
+      _input(e) {
+        // if (e.key == 'Escape') {
+        //   _this._command = '';
+        //   _this._mode = 'command';
+        //   return;
+        // }
+        // if (_this._mode == 'command') {
+        //   _this._command += e.key;
+        //   _this._dispathCommand();
+        //   return false;
+        // }
       }
 
       insert(text) {
