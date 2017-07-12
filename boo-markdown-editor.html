@@ -9,6 +9,7 @@
 <link rel="import" href="../iron-ajax/iron-ajax.html">
 <link rel="import" href="../boo-window/boo-window.html">
 <link rel="import" href="../marked/lib/marked.js">
+<link rel="import" href="./boo-vim-helper.html">
 
 <iron-iconset-svg size="24" name="boo-markdown-editor">
   <svg>
@@ -162,6 +163,7 @@
       <iron-a11y-keys id="a11y" 
         target="[[editor]]" keys="enter"
         on-keys-pressed="_onEnter"></iron-a11y-keys>
+      <boo-vim-helper></boo-vim-helper>
     </template>
     <script>
 
@@ -271,26 +273,23 @@
           this.noPreview = false;
         }
         this.marked = marked;
-        this.editor.oninput = this._input;
-      }
-
-      _input(e) {
-        // if (e.key == 'Escape') {
-        //   _this._command = '';
-        //   _this._mode = 'command';
-        //   return;
-        // }
-        // if (_this._mode == 'command') {
-        //   _this._command += e.key;
-        //   _this._dispathCommand();
-        //   return false;
-        // }
+        let vim = this.shadowRoot.querySelector('boo-vim-helper');
+        vim.input = this;
       }
 
       insert(text) {
         this.editor.focus();
         if (document.queryCommandSupported('insertText')) {
           document.execCommand('insertText', false, text);
+          return this;
+        }
+        throw '该浏览器不支持该markdown';
+      }
+
+      undo() {
+        this.editor.focus();
+        if (document.queryCommandSupported('undo')) {
+          document.execCommand('undo');
           return this;
         }
         throw '该浏览器不支持该markdown';
@@ -306,16 +305,11 @@
         _this.insert(text);
       }
 
-      onClick() {
-        console.log(this.currentRow());
-        this.deleteRow(this.currentRow());
-      }
-
       currentRow() {
         let rows = this.content.split("\n");
         let selectedStart = this.getSelectedStart();
         for(let i in rows) {
-          if (selectedStart <= 0) {
+          if (selectedStart < 0) {
             return --i;
           }
           selectedStart -= (rows[i].length + 1);
@@ -465,49 +459,6 @@
 
       _closePreview() {
         this.noPreview = true;
-      }
-
-      _dispathCommand() {
-        let pos = this.getSelectedStart();
-        switch (this._command) {
-          case 'a':
-            this._mode = 'edit';
-            this.select(pos, pos);
-            break;
-          case 'i':
-            this._mode = 'edit';
-            this.select(pos - 1, pos - 1);
-            break;
-          case 'j':
-            let currentRow = this.currentRow();
-            let length = this.rowLength(currentRow++);
-            let rowOffset = Math.min(this.rowOffset(), length);
-            this.selectRow(currentRow, rowOffset, length - rowOffset);
-            break;
-        }
-      }
-
-      _onEnter(e) {
-        // this.selectRow(3);
-        // let lexer = this.marked.lexer(this.content);
-        // let blockType = ['list_item_start'];
-        // let lastBlock = '';
-        // let current = this.getSelectedStart();
-        // for(let i in lexer) {
-        //   if (blockType.indexOf(lexer[i].type) != -1) {
-        //     lastBlock = lexer[i].type; 
-        //   }
-        //   if (lexer[i].text) {
-        //     current -= lexer[i].text.length;
-        //   }
-        //   if (current <= 0) {
-        //     break;
-        //   }
-        // }
-        // if (lastBlock == 'list_item_start') {
-        //   this.insert("\n* ");
-        //   return false;
-        // }
       }
 
       _showToolbarChanged(showToolbar, old) {

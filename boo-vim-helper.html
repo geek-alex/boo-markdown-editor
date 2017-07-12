@@ -1,0 +1,267 @@
+<link rel="import" href="../polymer/polymer-element.html">
+
+<dom-module id="boo-vim-helper">
+  <script>
+    const BOO_VIM_MODE_EDIT = 'edit';
+
+    const BOO_VIM_MODE_COMMAND = 'command';
+
+    const BOO_VIM_MODE_VIEW = 'view';
+
+    class BooVimHelper extends Polymer.Element {
+
+      static get is() { return 'boo-vim-helper'; }
+
+      static get properties() {
+        return {
+          mode: {
+            type: String,
+            value: BOO_VIM_MODE_COMMAND
+          },
+          disabled: {
+            type: String,
+            value: false
+          },
+          command: {
+            type: String,
+            value: '',
+            observer: '_commandChanged'
+          },
+          input: {
+            type: Object,
+            reflectToAttribute: true,
+            observer: '_inputChanged'
+          },
+          selectBegin: {
+            type: Number,
+          },
+          selectEnd: {
+            type: Number,
+            observer: '_select'
+          }
+        };
+      }
+
+      moveUp() {
+        let row = this.input.currentRow() - 1;
+        let lastRow = this.input.content.split('\n').length - 1;
+        row == lastRow && row--;
+        if (row < 0) {
+          return;
+        }
+        let length = this.input.rowLength(row);
+        let preOffset = Math.min(this.input.rowOffset(), length);
+        let sufOffset = length > 0 ? (preOffset - length) + 1 : 0;
+        this.input.selectRow(row, preOffset, sufOffset);
+        if (this.mode == BOO_VIM_MODE_VIEW) {
+          this.selectEnd = this._rowBegin() + this.input.rowOffset();
+        }
+      }
+
+      moveDown() {
+        let row = this.input.currentRow() + 1;
+        let rows = this.input.content.split('\n') - 1;
+        if (row > rows) {
+          return;
+        }
+        let length = this.input.rowLength(row);
+        let preOffset = Math.min(this.input.rowOffset(), length);
+        let sufOffset = length > 0 ? (preOffset - length) + 1 : 0;
+        this.input.selectRow(row, preOffset, sufOffset);
+        if (this.mode == BOO_VIM_MODE_VIEW) {
+          this.selectEnd = Math.min(
+            this._rowBegin() + this.input.rowOffset(), this._rowEnd()
+          );
+        }
+      }
+
+      moveLeft(step) {
+        if (this.mode == BOO_VIM_MODE_VIEW) {
+          this.selectEnd--;
+          return;
+        }
+        step = step || 1;
+        let pos = Math.max(
+          this.input.getSelectedStart(), this._rowBegin() + 1
+        ) - step;
+        this.input.select(pos, pos + 1);
+      }
+
+      moveRight(step) {
+        if (this.mode == BOO_VIM_MODE_VIEW) {
+          this.selectEnd++;
+          return;
+        }
+        step = step || 1;
+        let pos = Math.min(
+          this.input.getSelectedStart(), this._rowEnd() - 2
+        ) + step;
+        this.input.select(pos, pos + 1);
+      }
+
+      deleteChar() {
+        let pos = this.input.getSelectedStart();
+        this.input.insertAt('', pos, pos + 1);
+        this.input.select(pos, pos + 1);
+      }
+
+      deleteRow() {
+        this.input.deleteRow(this.input.currentRow());
+      }
+
+      mergeRow() {
+        let pos = this._rowEnd();
+        this.input.insertAt('', pos, pos + 1);
+      }
+
+      append() {
+        let pos = this.input.getSelectedStart();
+        this.mode = BOO_VIM_MODE_EDIT;
+        this.input.select(pos + 1, pos + 1);
+      }
+
+      insert() {
+        let pos = this.input.getSelectedStart();
+        this.mode = BOO_VIM_MODE_EDIT;
+        this.input.select(pos, pos);
+      }
+
+      appendRow() {
+        let pos = this._rowEnd();
+        this.input.select(pos, pos);
+        this.mode = BOO_VIM_MODE_EDIT;
+        this.command = '';
+      }
+
+      insertRow() {
+        let pos = this._rowBegin();
+        this.input.select(pos, pos);
+        this.mode = BOO_VIM_MODE_EDIT;
+        this.command = '';
+      }
+
+      deleteCharThenEdit() {
+        this.deleteChar();
+        this.mode = BOO_VIM_MODE_EDIT;
+        this.command = '';
+      }
+
+      insertRowThenEdit() {
+        this.appendRow();
+        this.input.insert('\n');
+      }
+
+      startView() {
+        let pos = this.input.getSelectedStart();
+        this.selectBegin = pos;
+        this.selectEnd = pos;
+        this.mode = BOO_VIM_MODE_VIEW;
+        this.command = '';
+      }
+
+      undo() {
+        this.input.undo();
+      }
+
+      keydown(e) {
+        if (this.disabled) {
+          return true;
+        }
+        if (e.key == 'Escape') {
+          if (this.mode == BOO_VIM_MODE_COMMAND) {
+            return;
+          }
+          this.command = '';
+          this.mode = BOO_VIM_MODE_COMMAND;
+          let pos = this.input.getSelectedStart();
+          this.input.select(pos - 1, pos);
+          return;
+        }
+        if (e.key == 'Tab' && this.mode == BOO_VIM_MODE_EDIT) {
+          this.input.insert('    ');
+          e.preventDefault();
+          return;
+        }
+        if (this.mode == BOO_VIM_MODE_COMMAND || this.mode == BOO_VIM_MODE_VIEW) {
+          this.command += e.key;
+          return false;
+        }
+      }
+
+      _rowEnd() {
+        let selectStart = this.input.getSelectedStart();
+        for(let i = selectStart; i <= this.input.content.length; ++i) {
+          if (this.input.content[i] == '\n') {
+            return i;
+          }
+        }
+
+        return this.input.content.length - 1;
+      }
+
+      _rowBegin() {
+        let selectStart = this.input.getSelectedStart();
+        for(let i = selectStart; i >= 0; --i) {
+          if (this.input.content[i] == '\n') {
+            return i + 1;
+          }
+        }
+
+        return 0;
+      }
+
+      _inputChanged(input) {
+        input.editor.onkeydown = this.keydown.bind(this);
+      }
+
+      _commandChanged() {
+        if (this.command == '') {
+          return;
+        }
+        let commands = this.getCommands();
+        if (commands[this.command]) {
+          commands[this.command].call(this);
+          this.command = '';
+        }
+        let clean = true;
+        for(let i in commands) {
+          if (i.indexOf(this.command) != -1) {
+            clean = false;
+          }
+        }
+        if (clean) {
+          this.command = '';
+        }
+      }
+
+      _select(selectEnd) {
+        console.log(this.selectBegin);
+        console.log(this.selectEnd);
+        let start = Math.min(this.selectBegin, selectEnd);
+        let end = Math.max(this.selectBegin, selectEnd);
+        this.input.select(start, end);
+      }
+
+      getCommands() {
+        return {
+          a: this.append,
+          i: this.insert,
+          j: this.moveDown,
+          h: this.moveLeft,
+          l: this.moveRight,
+          k: this.moveUp,
+          dd: this.deleteRow,
+          x: this.deleteChar,
+          u: this.undo,
+          s: this.deleteCharThenEdit,
+          o: this.insertRowThenEdit,
+          A: this.appendRow,
+          I: this.insertRow,
+          J: this.mergeRow,
+          v: this.startView
+        };
+      }
+    }
+    window.customElements.define(BooVimHelper.is, BooVimHelper);
+  </script>
+</dom-module>
