@@ -159,6 +159,14 @@
         this.command = '';
       }
 
+      copy() {
+        this.input.copy();
+      }
+
+      paste() {
+        this.input.paste();
+      }
+
       undo() {
         this.input.undo();
       }
@@ -246,17 +254,19 @@
         return {
           a: this.append,
           i: this.insert,
+          A: this.appendRow,
+          I: this.insertRow,
           j: this.moveDown,
           h: this.moveLeft,
           l: this.moveRight,
           k: this.moveUp,
+          yy: this.copy,
+          p: this.paste,
           dd: this.deleteRow,
           x: this.deleteChar,
           u: this.undo,
           s: this.deleteCharThenEdit,
           o: this.insertRowThenEdit,
-          A: this.appendRow,
-          I: this.insertRow,
           J: this.mergeRow,
           v: this.startView
         };

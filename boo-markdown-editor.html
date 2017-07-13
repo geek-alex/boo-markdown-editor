@@ -286,6 +286,22 @@
         throw '该浏览器不支持该markdown';
       }
 
+      copy() {
+        if(document.queryCommandSupported('copy')) {
+          document.execCommand('copy');
+          return this;
+        }
+        throw '该浏览器不支持该markdown';
+      }
+
+      paste() {
+        if (document.queryCommandSupported('paste')) {
+          document.execCommand('paste');
+          return this;
+        }
+        throw '该浏览器不支持该markdown';
+      }
+
       undo() {
         this.editor.focus();
         if (document.queryCommandSupported('undo')) {
