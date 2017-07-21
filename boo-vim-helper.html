@@ -117,6 +117,10 @@
       append() {
         let pos = this.input.getSelectedStart();
         this.mode = BOO_VIM_MODE_EDIT;
+        if (this.input.rowLength(this.input.currentRow()) == 0) {
+          this.input.select(pos, pos);
+          return;
+        }
         this.input.select(pos + 1, pos + 1);
       }
 
@@ -131,6 +135,8 @@
         this.input.select(pos, pos);
         this.mode = BOO_VIM_MODE_EDIT;
         this.command = '';
+
+        return pos;
       }
 
       insertRow() {
@@ -172,6 +178,7 @@
       }
 
       keydown(e) {
+        console.log(this.disabled);
         if (this.disabled) {
           return true;
         }
@@ -185,15 +192,21 @@
           this.input.select(pos - 1, pos);
           return;
         }
-        if (e.key == 'Tab' && this.mode == BOO_VIM_MODE_EDIT) {
-          this.input.insert('    ');
-          e.preventDefault();
+        if (this.mode == BOO_VIM_MODE_EDIT) {
+          switch(e.key) {
+            case 'Enter':
+              this.input.insert('\n');
+              e.preventDefault();
+              break;
+            case 'Tab':
+              this.input.insert('    ');
+              e.preventDefault();
+              break;
+          }
           return;
         }
-        if (this.mode == BOO_VIM_MODE_COMMAND || this.mode == BOO_VIM_MODE_VIEW) {
-          this.command += e.key;
-          return false;
-        }
+        this.command += e.key;
+        return false;
       }
 
       _rowEnd() {

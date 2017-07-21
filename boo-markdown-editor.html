@@ -160,10 +160,7 @@
       <template is="dom-if" if=[[smallScreen]]>
         <paper-fab icon="boo-markdown-editor:menu" on-click="_toggleToolbar"></paper-fab>
       </template>
-      <iron-a11y-keys id="a11y" 
-        target="[[editor]]" keys="enter"
-        on-keys-pressed="_onEnter"></iron-a11y-keys>
-      <boo-vim-helper></boo-vim-helper>
+      <boo-vim-helper disabled=[[!vimMode]]></boo-vim-helper>
     </template>
     <script>
 
@@ -181,48 +178,92 @@
 
       static get properties() {
         return {
+          /**
+           * 编辑的内容
+           */
           content: {
             type: String,
             reflectToAttribute: true,
             notify: true
           },
+          /**
+           * markdown 对象
+           */
           marked: {
             type: Object,
           },
+          /**
+           * 编辑器的输入框
+           */
           editor: {
             type: Object,
           },
+          /**
+           * 工具栏对象
+           */
           toolbar: {
             type: Object,
           },
+          /**
+           * 模板地址，如果制定一个模板地址，那么编辑器插入之后会自动装载模板
+           */
           templateUrl: {
             type: String,
             reflectToAttribute: true
           },
+          /**
+           * 控制工具栏是否显示的变量  
+           */
           showToolbar: {
             type: Boolean,
             value: false,
             notify: true,
             observer: '_showToolbarChanged'
           },
+          /**
+           * vim模式, 该模式打开，则支持vim的基础操作
+           */
+          vimMode: {
+            type: Boolean,
+            value: false,
+            reflectToAttribute: true
+          },
+          /**
+           * 判断屏幕尺寸的变量
+           */
           smallScreen: {
             type: Boolean,
           },
+          /**
+           * 工具栏显示的x坐标
+           */
           toolbarX: {
             type: Number,
           },
+          /**
+           * 工具栏显示的y坐标
+           */
           toolbarY: {
             type: Number,
           },
+          /**
+           * 控制是否显示预览的变量
+           */
           noPreview: {
             type: Boolean,
             reflectToAttribute: true,
             notify: true,
           },
+          /**
+           * 预览的初始化宽度  
+           */
           previewWidth: {
             type: Number,
             value: 400
           },
+          /**
+           * 预览的初始化高度 
+           */ 
           previewHeight: {
             type: Number,
             value: 300
@@ -238,22 +279,6 @@
             reflectToAttribute: true,
             value: 5
           },
-          /**
-           * vim 模式
-           * command|edit
-           */
-          _mode: {
-            type: String,
-            value: 'command'
-          },
-          _command: {
-            type: String,
-            value: ''
-          },
-          _rowOffset: {
-            type: Number,
-            value: 0
-          }
         };
       }
 
@@ -273,6 +298,12 @@
           this.noPreview = false;
         }
         this.marked = marked;
+        // Synchronous highlighting with highlight.js
+        this.marked.setOptions({
+          highlight: function (code) {
+            return require('highlight.js').highlightAuto(code).value;
+          }
+        });
         let vim = this.shadowRoot.querySelector('boo-vim-helper');
         vim.input = this;
       }
@@ -283,32 +314,41 @@
           document.execCommand('insertText', false, text);
           return this;
         }
-        throw '该浏览器不支持该markdown';
+        throw '该浏览器不支持插入文本';
       }
 
       copy() {
         if(document.queryCommandSupported('copy')) {
-          document.execCommand('copy');
+          document.execCommand('copy', false);
           return this;
         }
-        throw '该浏览器不支持该markdown';
+        throw '该浏览器不支持复制文本';
       }
 
       paste() {
         if (document.queryCommandSupported('paste')) {
-          document.execCommand('paste');
+          document.execCommand('paste', false);
           return this;
         }
-        throw '该浏览器不支持该markdown';
+        throw '该浏览器不支持粘贴文本';
       }
 
       undo() {
         this.editor.focus();
         if (document.queryCommandSupported('undo')) {
-          document.execCommand('undo');
+          document.execCommand('undo', false);
           return this;
         }
-        throw '该浏览器不支持该markdown';
+        throw '该浏览器不支持撤销操作';
+      }
+
+      delete() {
+        this.editor.focus();
+        if (document.queryCommandSupported('delete')) {
+          document.execCommand('delete', false);
+          return this;
+        }
+        throw '该浏览器不支持删除文本';
       }
 
       insertAt(text, start, end)
@@ -317,8 +357,12 @@
           end = start;
         }
         this.select(start, end);
-        let _this = this;
-        _this.insert(text);
+        this.insert(text);
+      }
+
+      deleteAt(start, end) {
+        this.select(start, end);
+        this.delete();
       }
 
       currentRow() {
@@ -373,8 +417,8 @@
       }
 
       deleteRow(row) {
-        this.selectRow(row, -1);
-        this.insert("\n");
+        this.selectRow(row);
+        this.delete();
       }
 
       select(start, end) {
