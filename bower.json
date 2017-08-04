@@ -9,6 +9,7 @@
     "app-layout": "PolymerElements/app-layout#^2.0.0",
     "iron-autogrow-textarea" : "PolymerElements/iron-autogrow-textarea#^2.0.0",
     "marked-element" : "PolymerElements/marked-element#^2.0.0",
+    "web-animations-js": "web-animations/web-animations-js#^2.2.0",
     "iron-icon" : "PolymerElements/iron-icon#^2.0.0",
     "paper-menu-button" : "PolymerElements/paper-menu-button#^2.0.0",
     "iron-iconset-svg" : "PolymerElements/iron-iconset-svg#^2.0.0",
